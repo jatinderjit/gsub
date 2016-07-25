@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import click
 import os
 import glob
