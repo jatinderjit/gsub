@@ -6,16 +6,12 @@ import glob
 def locate_git():
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     if glob.glob('.git'):
-        while True:
-            os.path.join('cur_dir')
-
+        pass
 
 @click.command()
 @click.option('--show', is_flag=True)
-@click.option('--check', is_flag=True)
-def git_dep(show, check):
+def git_dep(show):
     print(show)
-    print(check)
     locate_git()
 
 
