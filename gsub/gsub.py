@@ -12,10 +12,10 @@ def locate_git():
 
 @click.command()
 @click.option('--show', is_flag=True)
-def git_dep(show):
+def gsub(show):
     print(show)
     locate_git()
 
 
 if __name__ == '__main__':
-    git_dep()
+    gsub()
