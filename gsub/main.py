@@ -75,14 +75,14 @@ def folder_status(folder, git, commit, path):
         return "failed get git url (%s)" % cgit
 
     if git != cgit:
-        return "found %s, expected %s." % (cgit, git)
+        return "found %s." % cgit
 
     version, code = o(folder, "git rev-parse HEAD")
     if code != 0:
         return "failed to get git version (%s)" % version
 
     if commit != "master" and version != commit:
-        return "found version %s, expected %s." % (version, commit)
+        return "found %s@%s." % (cgit, version)
 
     return "Upto date."
 
@@ -101,7 +101,7 @@ def file_status(pwd, name, dirs):
     if base not in dirs:
         return rel, "missing"
 
-    return rel, folder_status(fbase, git, commit, patch)
+    return rel, folder_status(fbase, git, commit, patch), git, commit
 
 
 def handle_list(root):
@@ -118,7 +118,8 @@ def handle_list(root):
 
     maxsize = max(len(x[0]) for x in output)
     for x in output:
-        print(("%-" + str(maxsize) + "s:  %s") % x)
+        print(("%-" + str(maxsize) + "s:  %s") % x[:2])
+        print(("%-" + str(maxsize) + "s   Expected: %s@%s.") % ("", x[2], x[3]))
 
 
 def update_it(folder, name):
