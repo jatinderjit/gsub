@@ -25,7 +25,7 @@ def locate_git():
 
 
 def show_help():
-    print("""usage gsub [--version] [--help] <command> <args>
+    print("""usage: gsub [--version] [--help] <command> <args>
 
 Commands:
 
@@ -116,9 +116,9 @@ def handle_list(root):
         print("No .gsub files found in %s." % root)
         return
 
-    maxsize = max(len(x[0]) for x in output)
+    maxsize = max(len(x[0]) for x in output)+1
     for x in output:
-        print(("%-" + str(maxsize) + "s:  %s") % x[:2])
+        print(("%-" + str(maxsize) + "s   %s") % (x[0] + ":", x[1]))
         print(("%-" + str(maxsize) + "s   Expected: %s@%s.") % ("", x[2], x[3]))
 
 
@@ -197,9 +197,9 @@ def handle_update(root):
         print("No .gsub files found in %s." % root)
         return
 
-    maxsize = max(len(x[0]) for x in output)
+    maxsize = max(len(x[0]) for x in output) + 1
     for x in output:
-        print(("%-" + str(maxsize) + "s:  %s") % x)
+        print(("%-" + str(maxsize) + "s  %s") % (x[0] + ":", x[1]))
 
 
 def main():
