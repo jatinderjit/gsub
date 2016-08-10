@@ -17,7 +17,7 @@ except Exception:
     long_description = ""
 
 
-MODULE_PATH = os.path.join(os.getcwd(), "main", "__init__.py")
+MODULE_PATH = os.path.join(os.getcwd(), "gsub", "__init__.py")
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 

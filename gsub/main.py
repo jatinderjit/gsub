@@ -99,7 +99,7 @@ def file_status(pwd, name, dirs):
         return rel, str(e)
 
     if base not in dirs:
-        return rel, "missing"
+        return rel, "folder does not exist.", git, commit
 
     return rel, folder_status(fbase, git, commit, patch), git, commit
 
@@ -119,7 +119,7 @@ def handle_list(root):
     maxsize = max(len(x[0]) for x in output)+1
     for x in output:
         print(("%-" + str(maxsize) + "s   %s") % (x[0] + ":", x[1]))
-        print(("%-" + str(maxsize) + "s   Expected: %s@%s.") % ("", x[2], x[3]))
+        print(("%-" + str(maxsize) + "s   Expected: %s@%s.") % ("", x[2], x[3][:10]))
 
 
 def update_it(folder, name):
@@ -133,10 +133,20 @@ def update_it(folder, name):
     except Exception as e:
         return rel, str(e)
 
+    if os.path.isdir(fbase) and not os.path.isdir(os.path.join(fbase, ".git")):
+        print("%s is not a git folder. What to do?" % fbase)
+        if six.moves.input("Nuke %s? [y/N]: " % fbase).lower() == "y":
+            try:
+                shutil.rmtree(fbase)
+            except Exception as e:
+                return rel, "Error: failed to remove (%s)." % e
+        else:
+            return rel, "Not upto date."
+
     if os.path.isdir(os.path.join(folder, base)):
         cgit, code = o(fbase, "git config --get remote.origin.url")
         if code != 0:
-            return "Error: failed get git url (%s)." % cgit
+            return "Error: failed to git url (%s)." % cgit
 
         if cgit != git:
             print(
@@ -168,7 +178,16 @@ def update_it(folder, name):
         return "Error: failed to get git version (%s)." % version
 
     if version == commit:
-        return rel, "Upto date."
+        if cloned:
+            return rel, "Cloned %s @%s." % (git, version)
+        else:
+            return rel, "Upto date."
+
+    if cloned:
+        err, code = o(fbase, "git checkout %s" % commit)
+        if code != 0:
+            return rel, "Error: could not checkout (%s)." % err.strip()
+        return rel, "Cloned %s @%s, latest was %s." % (git, commit, version)
 
     print(
         "%s contains version %s, expected %s, what to do?" % (
