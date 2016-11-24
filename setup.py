@@ -1,56 +1,23 @@
 # -*- coding: utf-8 -*-
-#
-# To Upload to PyPI by executing:  python3 setup.py sdist upload -r pypi
-
-
-"""Setup.py for Python, as Generic as possible."""
-
 
 import os
 from setuptools import setup
 
 
-try:
-    long_description = open('README.md', 'rt').read()
-    long_description += open('ChangeLog.md', 'rt').read()
-except Exception:
-    long_description = ""
-
-
-MODULE_PATH = os.path.join(os.getcwd(), "gsub", "__init__.py")
-CUR_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def find_this(search, filename=MODULE_PATH):
-    """Take a string and a filename path string and return the found value."""
-    if not search:
-        return
-    for line in open(str(filename)).readlines():
-        if search.lower() in line.lower():
-            line = line.split("=")[1].strip()
-            if "'" in line or '"' in line or '"""' in line:
-                line = line.replace("'", "").replace('"', '').replace('"""', '')
-            return line
-
-
-install_requires = open('requirements.txt', 'r').read().split('\r\n')
 setup(
     name="gsub",
     description="Replacement for git-submodule",
-    long_description=long_description,
 
-    version=find_this("__version__"),
+    version="0.1.0",
 
-    author=find_this("__author__"),
-    author_email=find_this("__email__"),
-    maintainer=find_this("__author__"),
-    maintainer_email=find_this("__email__"),
+    author="Amit Upadhyay",
+    author_email="code@amitu.com",
 
-    url=find_this("__source__"),
-    license=find_this("__license__"),
+    url="https://github.com/Coverfox/gsub",
+    license="BSD",
 
 
-    install_requires=install_requires,
+    install_requires=["click==6.6"],
 
     packages=['gsub'],
     zip_safe=True,
