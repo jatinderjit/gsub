@@ -45,7 +45,7 @@ def parse(pth):
     with open(pth) as fd:
         first = fd.readline()
         if not first:
-            raise Exception("error: empty file")
+            raise Exception("error: empty file (%s)" % pth)
 
         parts = first.split()
         if len(parts) > 2:
@@ -54,7 +54,7 @@ def parse(pth):
         git = parts[0].strip()
         version = "master"
         if len(parts) > 1:
-            version = parts[1]
+            version = parts[1].strip()
 
         patch = fd.read()
         return git, version, patch
@@ -63,7 +63,7 @@ def parse(pth):
 def o(folder, cmd):
     proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, cwd=folder)
     proc.wait()
-    return proc.stdout.read().strip(), proc.returncode
+    return proc.stdout.read().decode("utf-8").strip(), proc.returncode
 
 
 def folder_status(folder, git, commit, path):
@@ -97,6 +97,7 @@ def file_status(pwd, name, dirs):
         git, commit, patch = parse(fullname)
     except Exception as e:
         return rel, str(e)
+
 
     if base not in dirs:
         return rel, "folder does not exist.", git, commit
