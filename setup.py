@@ -8,7 +8,7 @@ setup(
     name="gsub",
     description="Replacement for git-submodule",
 
-    version="0.1.0",
+    version="0.1.1",
 
     author="Amit Upadhyay",
     author_email="code@amitu.com",
@@ -27,8 +27,6 @@ setup(
 
 
     classifiers=[
-
-        'Development Status :: 5 - Development',
 
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',

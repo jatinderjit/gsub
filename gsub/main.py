@@ -197,9 +197,14 @@ def update_it(folder, name):
     )
 
     if six.moves.input("Checkout %s [y/N]: " % commit).lower() == "y":
+        err, code = o(fbase, "git fetch")
+        if code != 0:
+            return rel, "Error: could not fetch (%s)." % err.strip()
+
         err, code = o(fbase, "git checkout %s" % commit)
         if code != 0:
             return rel, "Error: could not checkout (%s)." % err.strip()
+
         return rel, "Checked out."
     else:
         return rel, "Not upto date."
