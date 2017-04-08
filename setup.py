@@ -8,7 +8,7 @@ setup(
     name="gsub",
     description="Replacement for git-submodule",
 
-    version="0.1.1",
+    version="0.1.2",
 
     author="Amit Upadhyay",
     author_email="code@amitu.com",
