@@ -8,7 +8,6 @@ import os
 import sys
 import subprocess
 import shutil
-
 import six
 
 
@@ -21,7 +20,6 @@ def locate_git():
         if ncd == cd:
             return False
         cd = ncd
-    return False
 
 
 def show_help():
@@ -29,11 +27,11 @@ def show_help():
 
 Commands:
 
-  list     List all gsub folders.
-  freeze   Update gsub files based on content of managed folders.
-  update   Create/update managed folders based on gsub files.
-  add      Add a new gsub file.""")
-    raise SystemExit
+  list          List all gsub folders.
+  freeze        Update gsub files based on content of managed folders.
+  update        Create/update managed folders based on gsub files.
+  vendor PATH   Add a new gsub file.""")
+    sys.exit(1)
 
 
 def show_version():
@@ -97,7 +95,6 @@ def file_status(pwd, name, dirs):
         git, commit, patch = parse(fullname)
     except Exception as e:
         return rel, str(e)
-
 
     if base not in dirs:
         return rel, "folder does not exist.", git, commit
@@ -172,7 +169,7 @@ def update_it(folder, name):
         if cloned:
             return rel, "Cloned %s @master." % git
         else:
-            return rel, "Upto date."
+            return rel, "Up to date."
 
     version, code = o(fbase, "git rev-parse HEAD")
     if code != 0:
@@ -182,7 +179,7 @@ def update_it(folder, name):
         if cloned:
             return rel, "Cloned %s @%s." % (git, version)
         else:
-            return rel, "Upto date."
+            return rel, "Up to date."
 
     if cloned:
         err, code = o(fbase, "git checkout %s" % commit)
@@ -207,7 +204,7 @@ def update_it(folder, name):
 
         return rel, "Checked out."
     else:
-        return rel, "Not upto date."
+        return rel, "Not up to date."
 
 
 def handle_update(root):
@@ -225,6 +222,60 @@ def handle_update(root):
     maxsize = max(len(x[0]) for x in output) + 1
     for x in output:
         print(("%-" + str(maxsize) + "s  %s") % (x[0] + ":", x[1]))
+
+
+def handle_vendor(pth):
+    pth = pth.rstrip("/")
+
+    dst = ("vendor/src/%s" % pth)
+    print("mkdir -p", dst)
+    dstdad = dst.rsplit("/", 1)[0]
+
+    giturl = "https://%s.git" % pth
+    gclone = "git clone %s" % giturl
+    print(dstdad, pth, giturl, gclone)
+
+    if not os.path.isdir("./vendor/src/"):
+        print(
+            "There is no vendor folder in this directory. "
+            "Do I create it? (y/N) "
+        )
+
+        if six.moves.input().lower() != "y":
+            sys.exit(1)
+
+    if not os.path.exists(dst):
+        try:
+            os.makedirs(dst)
+        except OSError as e:
+            print(e)
+            sys.exit(1)
+
+    git, code = o(dstdad, gclone)
+    if code != 0:
+        print(git)
+        sys.exit(code)
+
+    commit, code = o(dst, "git rev-parse HEAD")
+    if code != 0:
+        print(commit)
+        sys.exit(code)
+
+    commit = commit.strip()
+
+    try:
+        open(dst + ".gsub", "w").write("%s %s\n" % (giturl, commit))
+    except IOError as e:
+        print(e)
+        sys.exit(1)
+
+    o(".", "git add " + dst + ".gsub -f")
+
+    try:
+        open(".gitignore", "a+").write(dst + "/\n")
+    except IOError as e:
+        print(e)
+        sys.exit(1)
 
 
 def main():
@@ -248,6 +299,13 @@ def main():
 
     if first == "update":
         handle_update(root)
+
+    if first == "vendor":
+        print(sys.argv)
+        if len(sys.argv) != 3:
+            show_help()
+        second = sys.argv[2].replace("https://", "")
+        handle_vendor(second)
 
 if __name__ == '__main__':
     main()
