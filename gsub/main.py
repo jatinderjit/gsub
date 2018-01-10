@@ -35,7 +35,7 @@ Commands:
 
 
 def show_version():
-    print("gsub: v0.1.3")
+    print("gsub: v0.1.4")
     raise SystemExit
 
 

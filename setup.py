@@ -8,7 +8,7 @@ setup(
     name="gsub",
     description="Replacement for git-submodule",
 
-    version="0.1.3",
+    version="0.1.4",
 
     author="Amit Upadhyay",
     author_email="code@amitu.com",
@@ -17,7 +17,7 @@ setup(
     license="BSD",
 
 
-    install_requires=["click==6.6"],
+    install_requires=["click==6.6", "six"],
 
     packages=['gsub'],
     zip_safe=True,
@@ -46,8 +46,8 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
-
-        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
 
         'Topic :: Software Development',
 
