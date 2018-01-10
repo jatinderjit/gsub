@@ -7,3 +7,6 @@ by `PATH` into a `vendor` folder.
 
 Updating `gsub --version` to return the right version number.
 
+**Version 0.1.4:**
+
+Support for python3.6
