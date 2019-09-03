@@ -23,14 +23,18 @@ def locate_git():
 
 
 def show_help():
-    print("""usage: gsub [--version] [--help] <command> <args>
+    print(
+        """usage: gsub [--version] [--help] <command> <args>
 
 Commands:
 
-  list          List all gsub folders.
-  freeze        Update gsub files based on content of managed folders.
-  update        Create/update managed folders based on gsub files.
-  vendor PATH   Add a new gsub file.""")
+  list                  List all gsub folders.
+  freeze                Update gsub files based on content of managed folders.
+  update                Create/update managed folders based on gsub files.
+  update --noinput      Create/update without user confirmation.
+  vendor PATH           Add a new gsub file.
+"""
+    )
     sys.exit(1)
 
 
@@ -114,13 +118,13 @@ def handle_list(root):
         print("No .gsub files found in %s." % root)
         return
 
-    maxsize = max(len(x[0]) for x in output)+1
+    maxsize = max(len(x[0]) for x in output) + 1
     for x in output:
         print(("%-" + str(maxsize) + "s   %s") % (x[0] + ":", x[1]))
         print(("%-" + str(maxsize) + "s   Expected: %s@%s.") % ("", x[2], x[3][:10]))
 
 
-def update_it(folder, name):
+def update_it(folder, name, interactive):
     fullname = os.path.join(folder, name)
     base = name[:-5]
     fbase = os.path.join(folder, base)
@@ -132,14 +136,15 @@ def update_it(folder, name):
         return rel, str(e)
 
     if os.path.isdir(fbase) and not os.path.isdir(os.path.join(fbase, ".git")):
-        print("%s is not a git folder. What to do?" % fbase)
-        if six.moves.input("Nuke %s? [y/N]: " % fbase).lower() == "y":
-            try:
-                shutil.rmtree(fbase)
-            except Exception as e:
-                return rel, "Error: failed to remove (%s)." % e
-        else:
-            return rel, "Not upto date."
+        if interactive:
+            print("%s is not a git folder. What to do?" % fbase)
+            if six.moves.input("Nuke %s? [Y/N]: " % fbase).lower() != "y":
+                return rel, "Not upto date."
+        try:
+            print("Nuking %s" % fbase)
+            shutil.rmtree(fbase)
+        except Exception as e:
+            return rel, "Error: failed to remove (%s)." % e
 
     if os.path.isdir(os.path.join(folder, base)):
         cgit, code = o(fbase, "git config --get remote.origin.url")
@@ -147,16 +152,15 @@ def update_it(folder, name):
             return "Error: failed to git url (%s)." % cgit
 
         if cgit != git:
-            print(
-                "%s contains %s, expected %s, what to do?" % (rel, cgit, git)
-            )
-            if six.moves.input("Nuke %s [y/N]: " % fbase).lower() == "y":
-                try:
-                    shutil.rmtree(fbase)
-                except Exception as e:
-                    return rel, "Error: failed to remove (%s)." % e
-            else:
-                return rel, "Not upto date."
+            if interactive:
+                print("%s contains %s, expected %s, what to do?" % (rel, cgit, git))
+                if six.moves.input("Nuke %s [Y/N]: " % fbase).lower() != "y":
+                    return rel, "Not upto date."
+            try:
+                print("Nuking %s" % fbase)
+                shutil.rmtree(fbase)
+            except Exception as e:
+                return rel, "Error: failed to remove (%s)." % e
 
     cloned = False
     if not os.path.isdir(os.path.join(folder, base)):
@@ -187,33 +191,32 @@ def update_it(folder, name):
             return rel, "Error: could not checkout (%s)." % err.strip()
         return rel, "Cloned %s @%s, latest was %s." % (git, commit, version)
 
-    print(
-        "%s contains version %s, expected %s, what to do?" % (
-            rel, version, commit
+    if interactive:
+        print(
+            "%s contains version %s, expected %s, what to do?" % (rel, version, commit)
         )
-    )
+        if six.moves.input("Checkout %s [y/N]: " % commit).lower() != "y":
+            return rel, "Not up to date."
 
-    if six.moves.input("Checkout %s [y/N]: " % commit).lower() == "y":
-        err, code = o(fbase, "git fetch")
-        if code != 0:
-            return rel, "Error: could not fetch (%s)." % err.strip()
+    print("Checking out %s to %s" % (rel, commit))
+    err, code = o(fbase, "git fetch")
+    if code != 0:
+        return rel, "Error: could not fetch (%s)." % err.strip()
 
-        err, code = o(fbase, "git checkout %s" % commit)
-        if code != 0:
-            return rel, "Error: could not checkout (%s)." % err.strip()
+    err, code = o(fbase, "git checkout %s" % commit)
+    if code != 0:
+        return rel, "Error: could not checkout (%s)." % err.strip()
 
-        return rel, "Checked out."
-    else:
-        return rel, "Not up to date."
+    return rel, "Checked out."
 
 
-def handle_update(root):
+def handle_update(root, interactive):
     output = []
     for pwd, dirs, files in os.walk(root, followlinks=True):
         for f in files:
             if not f.endswith(".gsub"):
                 continue
-            output.append(update_it(pwd, f))
+            output.append(update_it(pwd, f, interactive))
 
     if not output:
         print("No .gsub files found in %s." % root)
@@ -227,7 +230,7 @@ def handle_update(root):
 def handle_vendor(pth):
     pth = pth.rstrip("/")
 
-    dst = ("vendor/src/%s" % pth)
+    dst = "vendor/src/%s" % pth
     print("mkdir -p", dst)
     dstdad = dst.rsplit("/", 1)[0]
 
@@ -236,10 +239,7 @@ def handle_vendor(pth):
     print(dstdad, pth, giturl, gclone)
 
     if not os.path.isdir("./vendor/src/"):
-        print(
-            "There is no vendor folder in this directory. "
-            "Do I create it? (y/N) "
-        )
+        print("There is no vendor folder in this directory. Do I create it? (Y/N) ")
 
         if six.moves.input().lower() != "y":
             sys.exit(1)
@@ -298,7 +298,13 @@ def main():
         handle_list(root)
 
     if first == "update":
-        handle_update(root)
+        if len(sys.argv) != 3:
+            interactive = True
+        elif sys.argv[2] != "--noinput":
+            show_help()
+        else:
+            interactive = False
+        handle_update(root, interactive)
 
     if first == "vendor":
         print(sys.argv)
@@ -307,5 +313,6 @@ def main():
         second = sys.argv[2].replace("https://", "")
         handle_vendor(second)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
